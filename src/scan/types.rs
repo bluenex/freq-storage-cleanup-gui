@@ -28,7 +28,13 @@ impl Item {
     }
 }
 
+#[derive(Clone, Copy)]
+pub struct DiskSpace {
+    pub total: u64,
+    pub free: u64,
+}
+
 pub struct ScanResult {
     pub items: Vec<Item>,
-    pub free: Option<u64>,
+    pub disk: Option<DiskSpace>,
 }

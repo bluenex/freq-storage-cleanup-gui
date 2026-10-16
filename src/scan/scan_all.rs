@@ -1,6 +1,6 @@
 use std::thread;
 
-use super::disk_free::disk_free;
+use super::disk_space::disk_space;
 use super::expand_rule::expand_rule;
 use super::measure_dir::measure_dir;
 use super::types::{Item, ScanResult};
@@ -22,6 +22,6 @@ pub fn scan_all() -> ScanResult {
     items.sort_by(|a, b| b.size.cmp(&a.size));
     ScanResult {
         items,
-        free: disk_free(),
+        disk: disk_space(),
     }
 }

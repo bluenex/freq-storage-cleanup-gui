@@ -1,5 +1,5 @@
 mod device_support;
-mod disk_free;
+mod disk_space;
 mod expand_rule;
 mod glob_dirs;
 mod measure_dir;
