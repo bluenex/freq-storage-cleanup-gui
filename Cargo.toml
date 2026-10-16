@@ -1,0 +1,18 @@
+[package]
+name = "freq-storage-cleanup"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+eframe = { version = "0.35.0", default-features = false, features = ["glow", "default_fonts"] }
+glob = "0.3.4"
+jwalk = "0.9.0"
+libc = "0.2.190"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
