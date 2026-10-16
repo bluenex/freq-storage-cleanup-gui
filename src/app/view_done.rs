@@ -6,7 +6,7 @@ use super::state::{App, Screen};
 impl App {
     pub fn show_done(&mut self, ui: &mut egui::Ui) {
         egui::CentralPanel::default().show(ui, |ui| {
-            let freed = match (self.free_before_clean, self.free) {
+            let freed = match (self.free_before_clean, self.free()) {
                 (Some(before), Some(after)) => format_size(after.saturating_sub(before)),
                 _ => "unknown".to_owned(),
             };

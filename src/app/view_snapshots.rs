@@ -6,7 +6,7 @@ use super::state::{App, Screen};
 
 impl App {
     pub fn start_snapshots(&mut self) {
-        self.free_before_clean.get_or_insert(self.free.unwrap_or(0));
+        self.free_before_clean.get_or_insert(self.free().unwrap_or(0));
         self.snapshots = None;
         self.delete_dataless = false;
         self.worker.list_snapshots();

@@ -1,18 +1,22 @@
 mod format_size;
 mod groups;
+mod palette;
+mod size_bar;
+mod squarify;
 mod state;
 mod view_confirm;
+mod view_disk_bar;
 mod view_done;
 mod view_log;
 mod view_select;
 mod view_snapshots;
+mod view_treemap;
 
 use std::time::Duration;
 
 use eframe::egui;
 
 use crate::worker::{Msg, Worker};
-use format_size::format_size;
 use state::Screen;
 
 pub use state::App;
@@ -25,21 +29,27 @@ impl App {
             worker,
             screen: Screen::Scanning,
             items: Vec::new(),
-            free: None,
+            disk: None,
             free_before_clean: None,
             plan: Vec::new(),
             log: Vec::new(),
             snapshots: None,
             delete_dataless: false,
             deleting_snapshots: false,
+            hovered: None,
+            hover_next: None,
         }
+    }
+
+    pub fn free(&self) -> Option<u64> {
+        self.disk.map(|d| d.free)
     }
 
     fn handle(&mut self, msg: Msg) {
         match msg {
             Msg::Scanned(result) => {
                 self.items = result.items;
-                self.free = result.free;
+                self.disk = result.disk;
                 self.screen = if self.screen == Screen::Rescanning {
                     Screen::Done
                 } else {
@@ -60,8 +70,10 @@ impl App {
         egui::Panel::top("top").show(ui, |ui| {
             ui.add_space(6.0);
             ui.horizontal(|ui| {
-                let free = self.free.map(format_size).unwrap_or_else(|| "…".to_owned());
-                ui.label(egui::RichText::new(format!("Free space: {free}")).heading());
+                ui.vertical(|ui| {
+                    ui.set_width(ui.available_width() - 80.0);
+                    self.show_disk_bar(ui);
+                });
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui
                         .add_enabled(self.screen == Screen::Select, egui::Button::new("Re-scan"))
@@ -98,6 +110,7 @@ impl eframe::App for App {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.hovered = self.hover_next.take();
         self.show_top(ui);
         match self.screen {
             Screen::Scanning => self.show_busy(ui, "Scanning…"),

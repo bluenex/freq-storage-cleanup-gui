@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::scan::Item;
 
@@ -27,4 +27,11 @@ pub fn group_items(items: &[Item]) -> Vec<Group> {
     }
     groups.sort_by(|a, b| b.size.cmp(&a.size));
     groups
+}
+
+pub fn group_name(group: &Group, home: &Path) -> String {
+    match &group.worktree {
+        Some(path) => path.strip_prefix(home).unwrap_or(path).display().to_string(),
+        None => "Caches and Xcode".to_owned(),
+    }
 }

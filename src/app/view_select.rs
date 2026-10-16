@@ -1,7 +1,9 @@
-use eframe::egui::{self, ProgressBar, RichText};
+use eframe::egui::{self, RichText, text::LayoutJob};
 
 use super::format_size::format_size;
-use super::groups::group_items;
+use super::groups::{group_items, group_name};
+use super::palette::{group_color, item_fill};
+use super::size_bar::size_bar;
 use super::state::{App, Screen};
 use crate::clean::build_plan;
 use crate::rules::home;
@@ -49,38 +51,70 @@ impl App {
                 if ui.button("Select none").clicked() {
                     self.items.iter_mut().for_each(|i| i.selected = false);
                 }
+                ui.label(RichText::new("Click a tile or a row to select it.").small().weak());
             });
-            ui.separator();
+            ui.add_space(4.0);
+
+            let groups = group_items(&self.items);
+            let map_height = (ui.available_height() * 0.45).clamp(160.0, 380.0);
+            self.show_treemap(ui, &groups, map_height);
+            ui.add_space(6.0);
 
             let max = self.items.iter().map(|i| i.size).max().unwrap_or(1).max(1);
             let home = home();
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for group in group_items(&self.items) {
-                    let name = match &group.worktree {
-                        Some(path) => path.strip_prefix(&home).unwrap_or(path).display().to_string(),
-                        None => "Caches and Xcode".to_owned(),
-                    };
-                    egui::CollapsingHeader::new(format!("{name}   {}", format_size(group.size)))
+                for (gi, group) in groups.iter().enumerate() {
+                    let color = group_color(gi);
+                    let name = group_name(group, &home);
+                    let mut title = LayoutJob::default();
+                    let style = ui.style();
+                    title.append(
+                        "● ",
+                        0.0,
+                        egui::TextFormat::simple(egui::TextStyle::Body.resolve(style), color),
+                    );
+                    let body =
+                        egui::TextFormat::simple(egui::TextStyle::Body.resolve(style), ui.visuals().text_color());
+                    title.append(&format!("{name}   {}", format_size(group.size)), 0.0, body);
+
+                    egui::CollapsingHeader::new(title)
                         .id_salt(&name)
                         .default_open(true)
                         .show(ui, |ui| {
-                            egui::Grid::new(&name).num_columns(3).striped(true).show(ui, |ui| {
+                            egui::Grid::new(&name).num_columns(3).show(ui, |ui| {
                                 for &i in &group.indices {
+                                    let hovered = self.hovered == Some(i);
                                     let item = &mut self.items[i];
-                                    let enabled = item.keep_reason.is_none();
-                                    let response = ui.add_enabled(
-                                        enabled,
-                                        egui::Checkbox::new(&mut item.selected, item.label.as_str()),
-                                    );
+                                    let mut label = RichText::new(item.label.as_str());
+                                    if hovered {
+                                        label = label.strong();
+                                    }
+                                    let checkbox = egui::Checkbox::new(&mut item.selected, label);
+                                    let response = ui.add_enabled(item.keep_reason.is_none(), checkbox);
                                     let paths: Vec<String> =
                                         item.paths.iter().map(|p| p.display().to_string()).collect();
                                     let tip = match item.keep_reason {
                                         Some(reason) => format!("Kept: {reason}\n{}", paths.join("\n")),
                                         None => paths.join("\n"),
                                     };
+                                    let row_hovered = response.hovered() || response.contains_pointer();
                                     response.on_hover_text(tip.clone()).on_disabled_hover_text(tip);
+
                                     ui.label(format_size(item.size));
-                                    ui.add(ProgressBar::new(item.size as f32 / max as f32).desired_width(220.0));
+                                    let t = ui.ctx().animate_bool_with_time(
+                                        egui::Id::new(("tile", i, &item.label)),
+                                        item.selected,
+                                        0.15,
+                                    );
+                                    let fill = if item.keep_reason.is_some() {
+                                        ui.visuals().weak_text_color()
+                                    } else {
+                                        item_fill(color, t)
+                                    };
+                                    let bar = size_bar(ui, item.size as f32 / max as f32, fill);
+                                    if row_hovered || bar.hovered() {
+                                        self.hover_next = Some(i);
+                                    }
                                     ui.end_row();
                                 }
                             });

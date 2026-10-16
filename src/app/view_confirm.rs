@@ -15,7 +15,7 @@ impl App {
                     let button =
                         egui::Button::new(RichText::new("Delete").strong()).fill(egui::Color32::from_rgb(170, 40, 40));
                     if ui.add(button).clicked() {
-                        self.free_before_clean = self.free;
+                        self.free_before_clean = self.free();
                         self.log.clear();
                         self.worker.clean(std::mem::take(&mut self.plan));
                         self.screen = Screen::Cleaning;
