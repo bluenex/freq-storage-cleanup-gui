@@ -2,7 +2,6 @@ mod format_size;
 mod groups;
 mod palette;
 mod size_bar;
-mod squarify;
 mod state;
 mod view_confirm;
 mod view_disk_bar;
@@ -10,7 +9,6 @@ mod view_done;
 mod view_log;
 mod view_select;
 mod view_snapshots;
-mod view_treemap;
 
 use std::time::Duration;
 
@@ -36,8 +34,6 @@ impl App {
             snapshots: None,
             delete_reference: false,
             deleting_snapshots: false,
-            hovered: None,
-            hover_next: None,
         }
     }
 
@@ -110,7 +106,6 @@ impl eframe::App for App {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        self.hovered = self.hover_next.take();
         self.show_top(ui);
         match self.screen {
             Screen::Scanning => self.show_busy(ui, "Scanning…"),
