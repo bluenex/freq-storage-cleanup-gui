@@ -7,6 +7,7 @@ mod view_confirm;
 mod view_disk_bar;
 mod view_done;
 mod view_log;
+mod view_scan_progress;
 mod view_select;
 mod view_snapshots;
 
@@ -14,6 +15,7 @@ use std::time::Duration;
 
 use eframe::egui;
 
+use crate::scan::ScanEvent;
 use crate::worker::{Msg, Worker};
 use state::Screen;
 
@@ -33,6 +35,7 @@ impl App {
             log: Vec::new(),
             snapshots: None,
             delete_reference: false,
+            scan_progress: Vec::new(),
             hide_empty: true,
             deleting_snapshots: false,
         }
@@ -44,7 +47,16 @@ impl App {
 
     fn handle(&mut self, msg: Msg) {
         match msg {
+            Msg::ScanProgress(ScanEvent::Found { labels }) => {
+                self.scan_progress = labels.into_iter().map(|l| (l, false)).collect();
+            }
+            Msg::ScanProgress(ScanEvent::Measured(i)) => {
+                if let Some(entry) = self.scan_progress.get_mut(i) {
+                    entry.1 = true;
+                }
+            }
             Msg::Scanned(result) => {
+                self.scan_progress.clear();
                 self.items = result.items;
                 self.disk = result.disk;
                 self.screen = if self.screen == Screen::Rescanning {
@@ -91,6 +103,7 @@ impl App {
                 ui.spinner();
                 ui.label(text);
             });
+            self.show_scan_progress(ui);
             if !self.log.is_empty() {
                 ui.separator();
                 self.show_log(ui);

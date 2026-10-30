@@ -5,10 +5,11 @@ use std::time::Duration;
 use eframe::egui;
 
 use crate::clean::{Step, execute};
-use crate::scan::{ScanResult, scan_all};
+use crate::scan::{ScanEvent, ScanResult, scan_all};
 use crate::snapshots::{Snapshot, delete_snapshots, list_snapshots};
 
 pub enum Msg {
+    ScanProgress(ScanEvent),
     Scanned(ScanResult),
     Log(String),
     CleanDone,
@@ -29,7 +30,7 @@ impl Worker {
         Self { tx, rx, ctx }
     }
 
-    fn spawn(&self, job: impl FnOnce(&dyn Fn(Msg)) + Send + 'static) {
+    fn spawn(&self, job: impl FnOnce(&(dyn Fn(Msg) + Sync)) + Send + 'static) {
         let tx = self.tx.clone();
         let ctx = self.ctx.clone();
         thread::spawn(move || {
@@ -45,7 +46,7 @@ impl Worker {
     pub fn scan(&self, delay: Duration) {
         self.spawn(move |send| {
             thread::sleep(delay);
-            send(Msg::Scanned(scan_all()));
+            send(Msg::Scanned(scan_all(&|event| send(Msg::ScanProgress(event)))));
         });
     }
 

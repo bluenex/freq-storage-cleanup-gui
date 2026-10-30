@@ -34,6 +34,23 @@ pub struct DiskSpace {
     pub free: u64,
 }
 
+impl Item {
+    /// The label plus the worktree's folder name, for places that show items outside their group.
+    pub fn full_label(&self) -> String {
+        match self.worktree.as_ref().and_then(|w| w.file_name()) {
+            Some(name) => format!("{} in {}", self.label, name.to_string_lossy()),
+            None => self.label.clone(),
+        }
+    }
+}
+
+pub enum ScanEvent {
+    /// All rows are known; `labels` are their full labels in scan order.
+    Found { labels: Vec<String> },
+    /// The row at this index has been measured.
+    Measured(usize),
+}
+
 pub struct ScanResult {
     pub items: Vec<Item>,
     pub disk: Option<DiskSpace>,

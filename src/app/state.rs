@@ -25,6 +25,8 @@ pub struct App {
     /// `None` while listing.
     pub snapshots: Option<Result<Vec<Snapshot>, String>>,
     pub delete_reference: bool,
+    /// Full labels of the rows being measured, with whether each is done. Empty outside a scan.
+    pub scan_progress: Vec<(String, bool)>,
     /// Hides 0 B rows on the select screen.
     pub hide_empty: bool,
     pub deleting_snapshots: bool,
