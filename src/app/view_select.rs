@@ -43,18 +43,30 @@ impl App {
             }
             ui.horizontal(|ui| {
                 if ui.button("Select all").clicked() {
+                    let hide_empty = self.hide_empty;
                     self.items
                         .iter_mut()
-                        .filter(|i| i.keep_reason.is_none())
+                        .filter(|i| i.keep_reason.is_none() && !(hide_empty && i.size == 0))
                         .for_each(|i| i.selected = true);
                 }
                 if ui.button("Select none").clicked() {
                     self.items.iter_mut().for_each(|i| i.selected = false);
                 }
+                if ui.checkbox(&mut self.hide_empty, "Hide 0 B").changed() && self.hide_empty {
+                    // Hidden rows must not stay selected, or they'd be cleaned unseen.
+                    self.items
+                        .iter_mut()
+                        .filter(|i| i.size == 0)
+                        .for_each(|i| i.selected = false);
+                }
             });
             ui.add_space(4.0);
 
-            let groups = group_items(&self.items, &home());
+            let groups = group_items(&self.items, &home(), self.hide_empty);
+            if groups.is_empty() {
+                ui.label("Nothing to clean.");
+                return;
+            }
 
             let max = self.items.iter().map(|i| i.size).max().unwrap_or(1).max(1);
             egui::ScrollArea::vertical().show(ui, |ui| {

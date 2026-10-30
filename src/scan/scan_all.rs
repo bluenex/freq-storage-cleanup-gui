@@ -18,7 +18,6 @@ pub fn scan_all() -> ScanResult {
         }
     });
 
-    items.sort_by(|a, b| b.size.cmp(&a.size));
     ScanResult {
         items,
         disk: disk_space(),

@@ -25,5 +25,7 @@ pub struct App {
     /// `None` while listing.
     pub snapshots: Option<Result<Vec<Snapshot>, String>>,
     pub delete_reference: bool,
+    /// Hides 0 B rows on the select screen.
+    pub hide_empty: bool,
     pub deleting_snapshots: bool,
 }

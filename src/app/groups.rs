@@ -8,11 +8,14 @@ pub struct Group {
     pub size: u64,
 }
 
-/// Items grouped by worktree, or by their rule's group when not in a worktree, largest group first.
-/// Items keep their order, which is already by size.
-pub fn group_items(items: &[Item], home: &Path) -> Vec<Group> {
+/// Items grouped by worktree, or by their rule's group when not in a worktree.
+/// Groups and items keep the scan order (rule order, then path), so it's the same on every scan.
+pub fn group_items(items: &[Item], home: &Path, hide_empty: bool) -> Vec<Group> {
     let mut groups: Vec<Group> = Vec::new();
     for (i, item) in items.iter().enumerate() {
+        if hide_empty && item.size == 0 {
+            continue;
+        }
         let name = match &item.worktree {
             Some(path) => path.strip_prefix(home).unwrap_or(path).display().to_string(),
             None => item.rule.group.to_owned(),
@@ -29,6 +32,5 @@ pub fn group_items(items: &[Item], home: &Path) -> Vec<Group> {
             }),
         }
     }
-    groups.sort_by(|a, b| b.size.cmp(&a.size));
     groups
 }

@@ -33,6 +33,7 @@ impl App {
             log: Vec::new(),
             snapshots: None,
             delete_reference: false,
+            hide_empty: true,
             deleting_snapshots: false,
         }
     }
