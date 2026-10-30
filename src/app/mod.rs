@@ -34,7 +34,7 @@ impl App {
             plan: Vec::new(),
             log: Vec::new(),
             snapshots: None,
-            delete_dataless: false,
+            delete_reference: false,
             deleting_snapshots: false,
             hovered: None,
             hover_next: None,

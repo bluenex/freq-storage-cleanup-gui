@@ -24,7 +24,7 @@ The rules are hard-coded. The app has no free-form path input.
 | Xcode DerivedData | `~/Library/Developer/Xcode/DerivedData` | delete |
 | iOS DeviceSupport | `~/Library/Developer/Xcode/iOS DeviceSupport/*` | delete, keeps the newest version per device |
 | Unavailable simulators | `~/Library/Developer/CoreSimulator/Devices/*` | `xcrun simctl delete unavailable` |
-| Time Machine local snapshots | `tmutil listlocalsnapshots /` | `tmutil deletelocalsnapshots`, keeps the `(dataless)` one |
+| Time Machine local snapshots | `tmutil listlocalsnapshots /` | `tmutil deletelocalsnapshots`, keeps the last-backup reference (and any `(dataless)` one) |
 
 To change the targets, edit `src/rules/constants.rs`.
 

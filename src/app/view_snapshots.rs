@@ -8,7 +8,7 @@ impl App {
     pub fn start_snapshots(&mut self) {
         self.free_before_clean.get_or_insert(self.free().unwrap_or(0));
         self.snapshots = None;
-        self.delete_dataless = false;
+        self.delete_reference = false;
         self.worker.list_snapshots();
         self.screen = Screen::Snapshots;
     }
@@ -23,7 +23,7 @@ impl App {
             return Vec::new();
         };
         list.iter()
-            .filter(|s| !s.dataless || self.delete_dataless)
+            .filter(|s| !s.is_reference() || self.delete_reference)
             .map(|s| s.date.clone())
             .collect()
     }
@@ -44,10 +44,15 @@ impl App {
                 Some(Ok(list)) => {
                     ui.label(format!("{} snapshot(s), size unknown without root.", list.len()));
                     for s in list {
-                        ui.monospace(if s.dataless { format!("{} (dataless)", s.date) } else { s.date.clone() });
+                        let tag = match (s.last_backup, s.dataless) {
+                            (true, _) => "  (last backup, kept)",
+                            (false, true) => "  (dataless, kept)",
+                            _ => "",
+                        };
+                        ui.monospace(format!("{}{tag}", s.date));
                     }
-                    if list.iter().any(|s| s.dataless) {
-                        ui.checkbox(&mut self.delete_dataless, "Also delete the (dataless) snapshot")
+                    if list.iter().any(|s| s.is_reference()) {
+                        ui.checkbox(&mut self.delete_reference, "Also delete the last-backup snapshot")
                             .on_hover_text("It marks the last external backup. Deleting it makes the next backup rescan the whole disk.");
                     }
                 }

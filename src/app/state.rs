@@ -24,7 +24,7 @@ pub struct App {
     pub log: Vec<String>,
     /// `None` while listing.
     pub snapshots: Option<Result<Vec<Snapshot>, String>>,
-    pub delete_dataless: bool,
+    pub delete_reference: bool,
     pub deleting_snapshots: bool,
     /// Item under the pointer in the list or the map, from the previous frame.
     pub hovered: Option<usize>,

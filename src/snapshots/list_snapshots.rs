@@ -2,6 +2,7 @@ use std::process::Command;
 
 use anyhow::{Result, bail};
 
+use super::reference_snapshot_ids::reference_snapshot_ids;
 use super::types::Snapshot;
 
 const PREFIX: &str = "com.apple.TimeMachine.";
@@ -22,6 +23,7 @@ pub fn list_snapshots() -> Result<Vec<Snapshot>> {
     if !out.status.success() {
         bail!("{}", String::from_utf8_lossy(&out.stderr).trim());
     }
+    let references = reference_snapshot_ids();
     let snapshots = String::from_utf8_lossy(&out.stdout)
         .lines()
         .filter_map(|line| {
@@ -29,6 +31,7 @@ pub fn list_snapshots() -> Result<Vec<Snapshot>> {
             is_snapshot_date(date).then(|| Snapshot {
                 date: date.to_owned(),
                 dataless: line.contains("(dataless)"),
+                last_backup: references.iter().any(|r| r == date),
             })
         })
         .collect();
