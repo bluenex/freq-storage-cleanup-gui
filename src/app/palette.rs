@@ -1,3 +1,5 @@
+use std::hash::{DefaultHasher, Hash, Hasher};
+
 use eframe::egui::Color32;
 
 const COLORS: [Color32; 8] = [
@@ -11,9 +13,11 @@ const COLORS: [Color32; 8] = [
     Color32::from_rgb(220, 122, 72),
 ];
 
-/// Color for the group at `index` in size order.
-pub fn group_color(index: usize) -> Color32 {
-    COLORS[index % COLORS.len()]
+/// Color for a group, from its name, so it stays the same when the group order changes.
+pub fn group_color(name: &str) -> Color32 {
+    let mut hasher = DefaultHasher::new();
+    name.hash(&mut hasher);
+    COLORS[hasher.finish() as usize % COLORS.len()]
 }
 
 /// Unselected items are a faint wash of their group color; selected ones are solid.

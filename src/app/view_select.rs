@@ -58,9 +58,9 @@ impl App {
 
             let max = self.items.iter().map(|i| i.size).max().unwrap_or(1).max(1);
             egui::ScrollArea::vertical().show(ui, |ui| {
-                for (gi, group) in groups.iter().enumerate() {
-                    let color = group_color(gi);
+                for group in &groups {
                     let name = &group.name;
+                    let color = group_color(name);
                     let mut title = LayoutJob::default();
                     let style = ui.style();
                     title.append(
