@@ -1,3 +1,4 @@
+mod checkbox_width;
 mod format_size;
 mod groups;
 mod palette;
