@@ -39,7 +39,7 @@ pub const GO_CLEAN_MODCACHE: Cmd = Cmd {
     args: &["clean", "-modcache"],
 };
 
-/// node_modules hard-link into the store, so deleting it frees nothing; prune drops unused packages.
+/// Drops packages no project uses, but keeps the store that current installs read.
 pub const PNPM_STORE_PRUNE: Cmd = Cmd {
     programs: &["~/Library/pnpm/pnpm", "/opt/homebrew/bin/pnpm"],
     args: &["store", "prune"],
@@ -107,9 +107,18 @@ pub const RULES: &[Rule] = &[
     Rule {
         label: "pnpm store",
         group: CACHES,
-        patterns: &["~/Library/pnpm/store"],
-        expand: Expand::Each,
+        patterns: &["~/Library/pnpm/store/v*"],
+        expand: Expand::Newest,
         clean: Clean::Run(&PNPM_STORE_PRUNE),
+        running_app: None,
+    },
+    // Each pnpm major version uses its own store dir and never reads older ones.
+    Rule {
+        label: "Old pnpm stores",
+        group: CACHES,
+        patterns: &["~/Library/pnpm/store/v*"],
+        expand: Expand::AllButNewest,
+        clean: Clean::RemoveDirs,
         running_app: None,
     },
     Rule {

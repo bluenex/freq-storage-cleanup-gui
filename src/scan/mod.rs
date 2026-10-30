@@ -7,9 +7,9 @@ mod is_running;
 mod measure_dir;
 mod modified_within;
 mod scan_all;
+mod split_newest;
 mod types;
 mod unavailable_simulators;
-mod without_newest;
 
 pub use scan_all::*;
 pub use types::*;

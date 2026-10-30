@@ -20,7 +20,8 @@ The rules are hard-coded. The app has no free-form path input.
 | Next.js build, per worktree | `~/orca/workspaces/*/*/apps/*/.next`, `~/Dev/_papaya/*/apps/*/.next` | delete |
 | Yarn, npm, npx, pnpm, Bun, uv, CocoaPods caches | `~/Library/Caches/{Yarn,pnpm,CocoaPods}`, `~/.npm/{_cacache,_npx}`, `~/.bun/install/cache`, `~/.cache/uv` | delete |
 | node-gyp, React Native, dotslash caches | `~/Library/Caches/{node-gyp,ReactNative,dotslash}` | delete |
-| pnpm store | `~/Library/pnpm/store` | `pnpm store prune` |
+| pnpm store | `~/Library/pnpm/store/v*`, the newest | `pnpm store prune` |
+| Old pnpm stores | `~/Library/pnpm/store/v*`, all but the newest | delete |
 | Go module cache | `~/go/pkg/mod` | `go clean -modcache` |
 | Homebrew cache | `~/Library/Caches/Homebrew` | `brew cleanup --prune=all` |
 | Xcode DerivedData | `~/Library/Developer/Xcode/DerivedData` | delete |

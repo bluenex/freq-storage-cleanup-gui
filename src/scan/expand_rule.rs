@@ -6,9 +6,9 @@ use super::drop_nested::drop_nested;
 use super::glob_dirs::glob_dirs;
 use super::is_running::is_running;
 use super::modified_within::modified_within;
+use super::split_newest::split_newest;
 use super::types::Item;
 use super::unavailable_simulators::unavailable_simulator_ids;
-use super::without_newest::without_newest;
 use crate::rules::{Expand, Rule, STALE_DAYS, home};
 
 fn file_name(path: &Path) -> String {
@@ -49,7 +49,9 @@ fn rows(rule: &'static Rule) -> Vec<Item> {
 
         Expand::All => combined(rule, matches),
 
-        Expand::AllButNewest => combined(rule, without_newest(matches)),
+        Expand::AllButNewest => combined(rule, split_newest(matches).1),
+
+        Expand::Newest => combined(rule, split_newest(matches).0.into_iter().collect()),
 
         Expand::Stale => {
             let home = home();

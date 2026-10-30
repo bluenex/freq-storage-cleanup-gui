@@ -6,6 +6,8 @@ pub enum Expand {
     All,
     /// One row for all matches except the most recently modified one.
     AllButNewest,
+    /// One row for only the most recently modified match.
+    Newest,
     /// One row per match; matches modified in the last `STALE_DAYS` days can't be selected.
     Stale,
     /// One row per worktree. The worktree is the match minus `depth` trailing components.
