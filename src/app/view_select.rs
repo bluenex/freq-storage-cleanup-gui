@@ -1,7 +1,7 @@
 use eframe::egui::{self, RichText, text::LayoutJob};
 
 use super::format_size::format_size;
-use super::groups::{group_items, group_name};
+use super::groups::group_items;
 use super::palette::{group_color, item_fill};
 use super::size_bar::size_bar;
 use super::state::{App, Screen};
@@ -54,14 +54,13 @@ impl App {
             });
             ui.add_space(4.0);
 
-            let groups = group_items(&self.items);
+            let groups = group_items(&self.items, &home());
 
             let max = self.items.iter().map(|i| i.size).max().unwrap_or(1).max(1);
-            let home = home();
             egui::ScrollArea::vertical().show(ui, |ui| {
                 for (gi, group) in groups.iter().enumerate() {
                     let color = group_color(gi);
-                    let name = group_name(group, &home);
+                    let name = &group.name;
                     let mut title = LayoutJob::default();
                     let style = ui.style();
                     title.append(
@@ -74,10 +73,10 @@ impl App {
                     title.append(&format!("{name}   {}", format_size(group.size)), 0.0, body);
 
                     egui::CollapsingHeader::new(title)
-                        .id_salt(&name)
+                        .id_salt(name)
                         .default_open(true)
                         .show(ui, |ui| {
-                            egui::Grid::new(&name).num_columns(3).show(ui, |ui| {
+                            egui::Grid::new(name).num_columns(3).show(ui, |ui| {
                                 for &i in &group.indices {
                                     let item = &mut self.items[i];
                                     let checkbox = egui::Checkbox::new(&mut item.selected, item.label.as_str());

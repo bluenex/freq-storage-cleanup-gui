@@ -1,25 +1,29 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::scan::Item;
 
 pub struct Group {
-    pub worktree: Option<PathBuf>,
+    pub name: String,
     pub indices: Vec<usize>,
     pub size: u64,
 }
 
-/// Items grouped by worktree (global items in one group), largest group first.
+/// Items grouped by worktree, or by their rule's group when not in a worktree, largest group first.
 /// Items keep their order, which is already by size.
-pub fn group_items(items: &[Item]) -> Vec<Group> {
+pub fn group_items(items: &[Item], home: &Path) -> Vec<Group> {
     let mut groups: Vec<Group> = Vec::new();
     for (i, item) in items.iter().enumerate() {
-        match groups.iter_mut().find(|g| g.worktree == item.worktree) {
+        let name = match &item.worktree {
+            Some(path) => path.strip_prefix(home).unwrap_or(path).display().to_string(),
+            None => item.rule.group.to_owned(),
+        };
+        match groups.iter_mut().find(|g| g.name == name) {
             Some(group) => {
                 group.indices.push(i);
                 group.size += item.size;
             }
             None => groups.push(Group {
-                worktree: item.worktree.clone(),
+                name,
                 indices: vec![i],
                 size: item.size,
             }),
@@ -27,11 +31,4 @@ pub fn group_items(items: &[Item]) -> Vec<Group> {
     }
     groups.sort_by(|a, b| b.size.cmp(&a.size));
     groups
-}
-
-pub fn group_name(group: &Group, home: &Path) -> String {
-    match &group.worktree {
-        Some(path) => path.strip_prefix(home).unwrap_or(path).display().to_string(),
-        None => "Caches and Xcode".to_owned(),
-    }
 }

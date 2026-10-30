@@ -4,7 +4,7 @@ use std::path::Path;
 use anyhow::{Result, bail};
 use glob::Pattern;
 
-use crate::rules::{GLOB_OPTIONS, Rule, home, pattern_root};
+use crate::rules::{GLOB_OPTIONS, Rule, pattern_root, resolve_pattern};
 
 /// Deletes `path` only if it still matches one of the rule's patterns, sits
 /// strictly under that pattern's root, and has no symlink anywhere in it.
@@ -19,9 +19,10 @@ pub fn safe_remove(path: &Path, rule: &Rule) -> Result<()> {
         bail!("resolves to {}", canonical.display());
     }
 
-    let home = home();
     let allowed = rule.patterns.iter().any(|p| {
-        let full = home.join(p);
+        let Some(full) = resolve_pattern(p) else {
+            return false;
+        };
         let root = pattern_root(&full);
         let matches = Pattern::new(&full.to_string_lossy()).is_ok_and(|pat| pat.matches_path_with(path, GLOB_OPTIONS));
         matches && path.starts_with(&root) && path != root
