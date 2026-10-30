@@ -9,7 +9,8 @@ pub struct Group {
 }
 
 /// Items grouped by worktree, or by their rule's group when not in a worktree.
-/// Groups and items keep the scan order (rule order, then path), so it's the same on every scan.
+/// Groups keep the scan order (rule order), so they're in the same place on every scan.
+/// Items in a group are largest first.
 pub fn group_items(items: &[Item], home: &Path, hide_empty: bool) -> Vec<Group> {
     let mut groups: Vec<Group> = Vec::new();
     for (i, item) in items.iter().enumerate() {
@@ -31,6 +32,9 @@ pub fn group_items(items: &[Item], home: &Path, hide_empty: bool) -> Vec<Group> 
                 size: item.size,
             }),
         }
+    }
+    for group in &mut groups {
+        group.indices.sort_by_key(|&i| std::cmp::Reverse(items[i].size));
     }
     groups
 }
