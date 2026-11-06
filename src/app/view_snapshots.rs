@@ -29,6 +29,27 @@ impl App {
     }
 
     pub fn show_snapshots(&mut self, ui: &mut egui::Ui) {
+        egui::Panel::bottom("snapshot_actions").show(ui, |ui| {
+            ui.add_space(6.0);
+            ui.horizontal(|ui| {
+                let dates = self.snapshots_to_delete();
+                let ready = !self.deleting_snapshots && self.snapshots.is_some();
+                let delete = egui::Button::new(format!("Delete {} snapshot(s)", dates.len()));
+                if ui.add_enabled(ready && !dates.is_empty(), delete).clicked() {
+                    self.deleting_snapshots = true;
+                    self.worker.delete_snapshots(dates);
+                }
+                if ui.add_enabled(ready, egui::Button::new("Skip")).clicked() {
+                    self.rescan_after_clean();
+                }
+                if self.deleting_snapshots {
+                    ui.spinner();
+                    ui.label("Deleting…");
+                }
+            });
+            ui.add_space(6.0);
+        });
+
         egui::CentralPanel::default().show(ui, |ui| {
             ui.heading("Time Machine local snapshots");
             ui.label("Snapshots taken before the cleanup still hold the deleted files. Space comes back only after they are deleted.");
@@ -43,14 +64,26 @@ impl App {
                 }
                 Some(Ok(list)) => {
                     ui.label(format!("{} snapshot(s), size unknown without root.", list.len()));
-                    for s in list {
-                        let tag = match (s.last_backup, s.dataless) {
-                            (true, _) => "  (last backup, kept)",
-                            (false, true) => "  (dataless, kept)",
-                            _ => "",
-                        };
-                        ui.monospace(format!("{}{tag}", s.date));
-                    }
+                    // The list gets at most half the height, so the command log below stays visible.
+                    let max_height = if self.log.is_empty() {
+                        f32::INFINITY
+                    } else {
+                        ui.available_height() * 0.5
+                    };
+                    egui::ScrollArea::vertical()
+                        .id_salt("snapshot_list")
+                        .max_height(max_height)
+                        .auto_shrink([false, true])
+                        .show(ui, |ui| {
+                            for s in list {
+                                let tag = match (s.last_backup, s.dataless) {
+                                    (true, _) => "  (last backup, kept)",
+                                    (false, true) => "  (dataless, kept)",
+                                    _ => "",
+                                };
+                                ui.monospace(format!("{}{tag}", s.date));
+                            }
+                        });
                     if list.iter().any(|s| s.is_reference()) {
                         ui.checkbox(&mut self.delete_reference, "Also delete the last-backup snapshot")
                             .on_hover_text("It marks the last external backup. Deleting it makes the next backup rescan the whole disk.");
@@ -58,20 +91,10 @@ impl App {
                 }
             }
 
-            ui.separator();
-            ui.horizontal(|ui| {
-                let dates = self.snapshots_to_delete();
-                let ready = !self.deleting_snapshots && self.snapshots.is_some();
-                if ui.add_enabled(ready && !dates.is_empty(), egui::Button::new(format!("Delete {} snapshot(s)", dates.len()))).clicked() {
-                    self.deleting_snapshots = true;
-                    self.worker.delete_snapshots(dates);
-                }
-                if ui.add_enabled(ready, egui::Button::new("Skip")).clicked() {
-                    self.rescan_after_clean();
-                }
-            });
-            ui.separator();
-            self.show_log(ui);
+            if !self.log.is_empty() {
+                ui.separator();
+                self.show_log(ui);
+            }
         });
     }
 }
